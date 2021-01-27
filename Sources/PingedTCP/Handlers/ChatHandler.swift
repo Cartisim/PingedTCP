@@ -65,14 +65,13 @@ final class ChatHandler: ChannelInboundHandler {
         guard let received = read.readString(length: read.readableBytes) else {return}
         buffer.writeString("\(received)")
         print(received, "Received On Post Message")
-        //        do {
-        let object = try? JSONDecoder().decode(EncryptedAuthRequest.self, from: buffer)
-        guard let decryptedObject = CartisimCrypto.decryptableResponse(ChatroomRequest.self, string: object!.encryptedObject) else {return}
-        var request = try! HTTPClient.Request(url: "\(Constants.BASE_URL)postMessage/\(decryptedObject.sessionID)", method: .POST)
+        do {
+        let object = try? JSONDecoder().decode(MessageResponse.self, from: buffer)
+        var request = try HTTPClient.Request(url: "\(Constants.BASE_URL)postMessage/\(object?.sessionID ?? "")", method: .POST)
         
         request.headers.add(name: "User-Agent", value: "Swift HTTPClient")
         request.headers.add(name: "Content-Type", value: "application/json")
-        request.headers.add(name: "Authorization", value: "Bearer \(decryptedObject.token)")
+        request.headers.add(name: "Authorization", value: "Bearer \(object?.token ?? "")")
         request.headers.add(name: "Connection", value: "keep-alive")
         request.headers.add(name: "Content-Length", value: "")
         request.headers.add(name: "Date", value: "\(Date())")
@@ -96,6 +95,9 @@ final class ChatHandler: ChannelInboundHandler {
             }
         }.whenFailure { (error) in
             print(error, "Error in Chat handler")
+        }
+        } catch {
+            print(error)
         }
     }
     

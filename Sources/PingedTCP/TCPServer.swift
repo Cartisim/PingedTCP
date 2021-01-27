@@ -3,18 +3,20 @@ import Foundation
 import NIO
 import Dispatch
 import NIOSSL
+import AsyncHTTPClient
 
 public class TCPServer {
     
     private var host: String?
     private var port: Int?
+    let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    static var httpClient: HTTPClient?
     
     init(host: String, port: Int) {
         self.host = host
         self.port = port
+        TCPServer.httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
     }
-    
-    let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
     
     private var serverBootstrap: ServerBootstrap {
         #if DEBUG || LOCAL
